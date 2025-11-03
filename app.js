@@ -31,6 +31,10 @@ const LOCATION_FAILURE_MESSAGE = "ការបញ្ជាក់ចូលមក�
 // --- Element References ---
 let userSearchInput, userDropdown, userSearchError, scanFaceBtn, modelStatusEl, faceScanModal, video, scanStatusEl, scanDebugEl, cancelScanBtn, loginFormContainer, inAppWarning, dataLoadingIndicator, rememberMeCheckbox, mainAppContainer, homeUserName, loginPage, bottomNav, userPhotoEl, userNameEl, userIdEl, userGenderEl, userGroupEl, userDepartmentEl, logoutBtn, navButtons, pages, mainContent, requestLeavePage, openLeaveRequestBtn, cancelLeaveRequestBtn, submitLeaveRequestBtn, leaveDurationSearchInput, leaveDurationDropdownEl, leaveSingleDateContainer, leaveDateRangeContainer, leaveSingleDateInput, leaveStartDateInput, leaveEndDateInput, leaveRequestErrorEl, leaveRequestLoadingEl, leaveReasonSearchInput, leaveReasonDropdownEl, historyContainer, historyPlaceholder, criticalErrorDisplay, historyTabLeave, historyTabOut, historyContainerLeave, historyContainerOut, historyPlaceholderLeave, historyPlaceholderOut, historyContent, editModal, editModalTitle, editForm, editRequestId, editDurationSearch, editDurationDropdown, editSingleDateContainer, editLeaveDateSingle, editDateRangeContainer, editLeaveDateStart, editLeaveDateEnd, editReasonSearch, editReasonDropdown, editErrorEl, editLoadingEl, submitEditBtn, cancelEditBtn, deleteModal, deleteConfirmBtn, cancelDeleteBtn, deleteRequestId, deleteCollectionType, openOutRequestBtn, requestOutPage, cancelOutRequestBtn, submitOutRequestBtn, outRequestErrorEl, outRequestLoadingEl, outDurationSearchInput, outDurationDropdownEl, outReasonSearchInput, outReasonDropdownEl, outDateInput, returnScanModal, returnVideo, returnScanStatusEl, returnScanDebugEl, cancelReturnScanBtn, customAlertModal, customAlertTitle, customAlertMessage, customAlertOkBtn, customAlertIconWarning, customAlertIconSuccess, invoiceModal, closeInvoiceModalBtn, invoiceModalTitle, invoiceContentWrapper, invoiceContent, invoiceUserName, invoiceUserId, invoiceUserDept, invoiceRequestType, invoiceDuration, invoiceDates, invoiceReason, invoiceStatus, invoiceApprover, invoiceDecisionTime, invoiceRequestId, invoiceReturnInfo, invoiceReturnStatus, invoiceReturnTime, shareInvoiceBtn, invoiceShareStatus;
 
+// +++ កូដថ្មី 1 +++
+// ធាតុ​ថ្មី​សម្រាប់​ផ្ទាំងទូទាត់ប្រាក់
+let paymentQrModal, cancelPaymentBtn, confirmPaymentBtn;
+
 // --- Duration/Reason Constants ---
 const leaveDurations = ["មួយព្រឹក", "មួយរសៀល", "មួយយប់", "មួយថ្ងៃ", "មួយថ្ងៃកន្លះ", "ពីរថ្ងៃ", "ពីរថ្ងៃកន្លះ", "បីថ្ងៃ", "បីថ្ងៃកន្លះ", "បួនថ្ងៃ", "បួនថ្ងៃកន្លះ", "ប្រាំថ្ងៃ", "ប្រាំថ្ងៃកន្លះ", "ប្រាំមួយថ្ងៃ", "ប្រាំមួយថ្ងៃកន្លះ", "ប្រាំពីរថ្ងៃ"]; const leaveDurationItems = leaveDurations.map(d => ({ text: d, value: d })); const leaveReasons = ["ឈឺក្បាល", "ចុកពោះ", "គ្រុនក្ដៅ", "ផ្ដាសាយ"]; const leaveReasonItems = leaveReasons.map(r => ({ text: r, value: r })); const singleDayLeaveDurations = ["មួយព្រឹក", "មួយរសៀល", "មួយយប់", "មួយថ្ងៃ"]; const outDurations = ["មួយព្រឹក", "មួយរសៀល", "មួយថ្ងៃ"]; const outDurationItems = outDurations.map(d => ({ text: d, value: d })); const outReasons = ["ទៅផ្សារ", "ទៅកាត់សក់", "ទៅភ្នំពេញ", "ទៅពេទ្យ", "ទៅយកអីវ៉ាន់"]; const outReasonItems = outReasons.map(r => ({ text: r, value: r })); const durationToDaysMap = { "មួយថ្ងៃកន្លះ": 1.5, "ពីរថ្ងៃ": 2, "ពីរថ្ងៃកន្លះ": 2.5, "បីថ្ងៃ": 3, "បីថ្ងៃកន្លះ": 3.5, "បួនថ្ងៃ": 4, "បួនថ្ងៃកន្លះ": 4.5, "ប្រាំថ្ងៃ": 5, "ប្រាំថ្ងៃកន្លះ": 5.5, "ប្រាំមួយថ្ងៃ": 6, "ប្រាំមួយថ្ងៃកន្លះ": 6.5, "ប្រាំពីរថ្ងៃ": 7 };
 
@@ -43,40 +47,40 @@ function formatFirestoreTimestamp(timestamp, format = 'HH:mm dd/MM/yyyy') { let 
 function parseReturnedAt_(returnedAtString) { if (!returnedAtString || typeof returnedAtString !== 'string') return { date: "", time: "" }; const parts = returnedAtString.split(' '); if (parts.length === 2) return { time: parts[0], date: parts[1] }; return { date: returnedAtString, time: "" }; }
 // ========== ចាប់ផ្តើមបន្ថែមនៅទីនេះ ==========
 function formatDateToDdMmmYyyy(dateString) {
-    // dateString គឺ 'dd/mm/yyyy' (ឧ. '31/10/2025')
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    let date;
-    
-    if (dateString.includes('/') && dateString.split('/').length === 3) { // dd/mm/yyyy
-        const parts = dateString.split('/');
-        date = new Date(parts[2], parts[1] - 1, parts[0]); // year, month (0-indexed), day
-    } else {
-        date = new Date(); // Fallback
-    }
+    // dateString គឺ 'dd/mm/yyyy' (ឧ. '31/10/2025')
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let date;
+    
+    if (dateString.includes('/') && dateString.split('/').length === 3) { // dd/mm/yyyy
+        const parts = dateString.split('/');
+        date = new Date(parts[2], parts[1] - 1, parts[0]); // year, month (0-indexed), day
+    } else {
+        date = new Date(); // Fallback
+    }
 
-    if (isNaN(date.getTime())) date = new Date(); // Error handling
+    if (isNaN(date.getTime())) date = new Date(); // Error handling
 
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = monthNames[date.getMonth()];
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`; // ត្រឡប់ជា '31-Oct-2025'
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`; // ត្រឡប់ជា '31-Oct-2025'
 }
 
 function parseDdMmmYyyyToInputFormat(ddMmmYyyy) {
-    // បំប្លែង '31-Oct-2025' ទៅ '2025-10-31' សម្រាប់ <input type="date">
-    if (!ddMmmYyyy || ddMmmYyyy.split('-').length !== 3) return getTodayString(); // fallback
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const parts = ddMmmYyyy.split('-'); // [ '31', 'Oct', '2025' ]
-    if(parts.length !== 3) return getTodayString();
+    // បំប្លែង '31-Oct-2025' ទៅ '2025-10-31' សម្រាប់ <input type="date">
+    if (!ddMmmYyyy || ddMmmYyyy.split('-').length !== 3) return getTodayString(); // fallback
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const parts = ddMmmYyyy.split('-'); // [ '31', 'Oct', '2025' ]
+    if(parts.length !== 3) return getTodayString();
 
-    const day = parts[0];
-    const monthIndex = monthNames.indexOf(parts[1]);
-    const year = parts[2];
+    const day = parts[0];
+    const monthIndex = monthNames.indexOf(parts[1]);
+    const year = parts[2];
 
-    if (monthIndex === -1) return getTodayString(); // fallback
+    if (monthIndex === -1) return getTodayString(); // fallback
 
-    const mm = String(monthIndex + 1).padStart(2, '0');
-    return `${year}-${mm}-${day}`; // ត្រឡប់ជា 'yyyy-mm-dd'
+    const mm = String(monthIndex + 1).padStart(2, '0');
+    return `${year}-${mm}-${day}`; // ត្រឡប់ជា 'yyyy-mm-dd'
 }
 // ========== បញ្ចប់ការបន្ថែមនៅទីនេះ ==========
 
@@ -87,6 +91,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Assign Element References ---
     userSearchInput = document.getElementById('user-search'); userDropdown = document.getElementById('user-dropdown'); userSearchError = document.getElementById('user-search-error'); scanFaceBtn = document.getElementById('scan-face-btn'); modelStatusEl = document.getElementById('model-status'); faceScanModal = document.getElementById('face-scan-modal'); video = document.getElementById('video'); scanStatusEl = document.getElementById('scan-status'); scanDebugEl = document.getElementById('scan-debug'); cancelScanBtn = document.getElementById('cancel-scan-btn'); loginFormContainer = document.getElementById('login-form-container'); inAppWarning = document.getElementById('in-app-warning'); dataLoadingIndicator = document.getElementById('data-loading-indicator'); rememberMeCheckbox = document.getElementById('remember-me'); mainAppContainer = document.getElementById('main-app-container'); homeUserName = document.getElementById('home-user-name'); loginPage = document.getElementById('page-login'); bottomNav = document.getElementById('bottom-navigation'); userPhotoEl = document.getElementById('user-photo'); userNameEl = document.getElementById('user-name'); userIdEl = document.getElementById('user-id'); userGenderEl = document.getElementById('user-gender'); userGroupEl = document.getElementById('user-group'); userDepartmentEl = document.getElementById('user-department'); logoutBtn = document.getElementById('logout-btn'); navButtons = document.querySelectorAll('.nav-btn');
     mainContent = document.getElementById('main-content'); criticalErrorDisplay = document.getElementById('critical-error-display'); requestLeavePage = document.getElementById('page-request-leave'); openLeaveRequestBtn = document.getElementById('open-leave-request-btn'); cancelLeaveRequestBtn = document.getElementById('cancel-leave-request-btn'); submitLeaveRequestBtn = document.getElementById('submit-leave-request-btn'); leaveDurationSearchInput = document.getElementById('leave-duration-search'); leaveDurationDropdownEl = document.getElementById('leave-duration-dropdown'); leaveSingleDateContainer = document.getElementById('leave-single-date-container'); leaveDateRangeContainer = document.getElementById('leave-date-range-container'); leaveSingleDateInput = document.getElementById('leave-date-single'); leaveStartDateInput = document.getElementById('leave-date-start'); leaveEndDateInput = document.getElementById('leave-date-end'); leaveRequestErrorEl = document.getElementById('leave-request-error'); leaveRequestLoadingEl = document.getElementById('leave-request-loading'); leaveReasonSearchInput = document.getElementById('leave-reason-search'); leaveReasonDropdownEl = document.getElementById('leave-reason-dropdown'); historyContainer = document.getElementById('history-container'); historyPlaceholder = document.getElementById('history-placeholder'); historyTabLeave = document.getElementById('history-tab-leave'); historyTabOut = document.getElementById('history-tab-out'); historyContainerLeave = document.getElementById('history-container-leave'); historyContainerOut = document.getElementById('history-container-out'); historyPlaceholderLeave = document.getElementById('history-placeholder-leave'); historyPlaceholderOut = document.getElementById('history-placeholder-out'); historyContent = document.getElementById('history-content'); editModal = document.getElementById('edit-modal'); editModalTitle = document.getElementById('edit-modal-title'); editForm = document.getElementById('edit-form'); editRequestId = document.getElementById('edit-request-id'); editDurationSearch = document.getElementById('edit-duration-search'); editDurationDropdown = document.getElementById('edit-duration-dropdown'); editSingleDateContainer = document.getElementById('edit-single-date-container'); editLeaveDateSingle = document.getElementById('edit-leave-date-single'); editDateRangeContainer = document.getElementById('edit-date-range-container'); editLeaveDateStart = document.getElementById('edit-leave-date-start'); editLeaveDateEnd = document.getElementById('edit-leave-date-end'); editReasonSearch = document.getElementById('edit-reason-search'); editReasonDropdown = document.getElementById('edit-reason-dropdown'); editErrorEl = document.getElementById('edit-error'); editLoadingEl = document.getElementById('edit-loading'); submitEditBtn = document.getElementById('submit-edit-btn'); cancelEditBtn = document.getElementById('cancel-edit-btn'); deleteModal = document.getElementById('delete-modal'); deleteConfirmBtn = document.getElementById('delete-confirm-btn'); cancelDeleteBtn = document.getElementById('cancel-delete-btn'); deleteRequestId = document.getElementById('delete-request-id'); deleteCollectionType = document.getElementById('delete-collection-type'); openOutRequestBtn = document.getElementById('open-out-request-btn'); requestOutPage = document.getElementById('page-request-out'); cancelOutRequestBtn = document.getElementById('cancel-out-request-btn'); submitOutRequestBtn = document.getElementById('submit-out-request-btn'); outRequestErrorEl = document.getElementById('out-request-error'); outRequestLoadingEl = document.getElementById('out-request-loading'); outDurationSearchInput = document.getElementById('out-duration-search'); outDurationDropdownEl = document.getElementById('out-duration-dropdown'); outReasonSearchInput = document.getElementById('out-reason-search'); outReasonDropdownEl = document.getElementById('out-reason-dropdown'); outDateInput = document.getElementById('out-date-single'); returnScanModal = document.getElementById('return-scan-modal'); returnVideo = document.getElementById('return-video'); returnScanStatusEl = document.getElementById('return-scan-status'); returnScanDebugEl = document.getElementById('return-scan-debug'); cancelReturnScanBtn = document.getElementById('cancel-return-scan-btn'); customAlertModal = document.getElementById('custom-alert-modal'); customAlertTitle = document.getElementById('custom-alert-title'); customAlertMessage = document.getElementById('custom-alert-message'); customAlertOkBtn = document.getElementById('custom-alert-ok-btn'); customAlertIconWarning = document.getElementById('custom-alert-icon-warning'); customAlertIconSuccess = document.getElementById('custom-alert-icon-success'); invoiceModal = document.getElementById('invoice-modal'); closeInvoiceModalBtn = document.getElementById('close-invoice-modal-btn'); invoiceModalTitle = document.getElementById('invoice-modal-title'); invoiceContentWrapper = document.getElementById('invoice-content-wrapper'); invoiceContent = document.getElementById('invoice-content'); invoiceUserName = document.getElementById('invoice-user-name'); invoiceUserId = document.getElementById('invoice-user-id'); invoiceUserDept = document.getElementById('invoice-user-dept'); invoiceRequestType = document.getElementById('invoice-request-type'); invoiceDuration = document.getElementById('invoice-duration'); invoiceDates = document.getElementById('invoice-dates'); invoiceReason = document.getElementById('invoice-reason'); invoiceStatus = document.getElementById('invoice-status'); invoiceApprover = document.getElementById('invoice-approver'); invoiceDecisionTime = document.getElementById('invoice-decision-time'); invoiceRequestId = document.getElementById('invoice-request-id'); invoiceReturnInfo = document.getElementById('invoice-return-info'); invoiceReturnStatus = document.getElementById('invoice-return-status'); invoiceReturnTime = document.getElementById('invoice-return-time'); shareInvoiceBtn = document.getElementById('share-invoice-btn'); invoiceShareStatus = document.getElementById('invoice-share-status');
+
+    // +++ កូដថ្មី 2 +++
+    // === ធាតុ​ថ្មី​សម្រាប់​ផ្ទាំងទូទាត់ប្រាក់ ===
+    paymentQrModal = document.getElementById('payment-qr-modal');
+    cancelPaymentBtn = document.getElementById('cancel-payment-btn');
+    confirmPaymentBtn = document.getElementById('confirm-payment-btn');
 
     // === ធាតុ​ថ្មី​សម្រាប់​ទំព័រ​វត្តមាន ===
     openDailyAttendanceBtn = document.getElementById('open-daily-attendance-btn');
@@ -184,8 +194,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (submitLeaveRequestBtn) submitLeaveRequestBtn.addEventListener('click', async () => { selectedLeaveDuration = leaveDurations.includes(leaveDurationSearchInput.value) ? leaveDurationSearchInput.value : null; selectedLeaveReason = leaveReasonSearchInput.value; if (!currentUser || !currentUser.id) return showCustomAlert("Error", "មានបញ្ហា៖ មិនអាចបញ្ជាក់អ្នកប្រើប្រាស់បានទេ។"); if (!selectedLeaveDuration) { if (leaveRequestErrorEl) { leaveRequestErrorEl.textContent = 'សូមជ្រើសរើស "រយៈពេល" ឲ្យបានត្រឹមត្រូវ (ពីក្នុងបញ្ជី)។'; leaveRequestErrorEl.classList.remove('hidden'); } return; } if (!selectedLeaveReason || selectedLeaveReason.trim() === '') { if (leaveRequestErrorEl) { leaveRequestErrorEl.textContent = 'សូមបំពេញ "មូលហេតុ" ជាមុនសិន។'; leaveRequestErrorEl.classList.remove('hidden'); } return; } if (leaveRequestErrorEl) leaveRequestErrorEl.classList.add('hidden'); if (leaveRequestLoadingEl) leaveRequestLoadingEl.classList.remove('hidden'); if (submitLeaveRequestBtn) submitLeaveRequestBtn.disabled = true; try { const isSingleDay = singleDayLeaveDurations.includes(selectedLeaveDuration); const startDateInputVal = isSingleDay ? (leaveSingleDateInput ? leaveSingleDateInput.value : getTodayString('dd/mm/yyyy')) : (leaveStartDateInput ? formatInputDateToDb(leaveStartDateInput.value) : getTodayString('dd/mm/yyyy')); const endDateInputVal = isSingleDay ? startDateInputVal : (leaveEndDateInput ? formatInputDateToDb(leaveEndDateInput.value) : getTodayString('dd/mm/yyyy')); if (new Date(formatDbDateToInput(endDateInputVal)) < new Date(formatDbDateToInput(startDateInputVal))) { throw new Error('"ថ្ងៃបញ្ចប់" មិនអាចនៅមុន "ថ្ងៃចាប់ផ្តើម" បានទេ។'); } const requestId = `leave_${Date.now()}`; const requestData = { userId: currentUser.id, name: currentUser.name, department: currentUser.department || 'N/A', photo: currentUser.photo || null, duration: selectedLeaveDuration, reason: selectedLeaveReason.trim(), startDate: formatDateToDdMmmYyyy(startDateInputVal), endDate: formatDateToDdMmmYyyy(endDateInputVal), status: 'pending', requestedAt: serverTimestamp(), requestId: requestId, firestoreUserId: auth.currentUser ? auth.currentUser.uid : 'unknown_auth_user' }; if (!db || !leaveRequestsCollectionPath) throw new Error("Firestore DB or Collection Path is not initialized."); const requestRef = doc(db, leaveRequestsCollectionPath, requestId); await setDoc(requestRef, requestData); console.log("Firestore (leave) write successful."); const dateString = (startDateInputVal === endDateInputVal) ? startDateInputVal : `ពី ${startDateInputVal} ដល់ ${endDateInputVal}`; let message = `<b>🔔 សំណើសុំច្បាប់ឈប់សម្រាក 🔔</b>\n\n`; message += `<b>ឈ្មោះ:</b> ${requestData.name} (${requestData.userId})\n`; message += `<b>ផ្នែក:</b> ${requestData.department}\n`; message += `<b>រយៈពេល:</b> ${requestData.duration}\n`; message += `<b>កាលបរិច្ឆេទ:</b> ${dateString}\n`; message += `<b>មូលហេតុ:</b> ${requestData.reason}\n\n`; message += `(សូមចូល Firestore ដើម្បីពិនិត្យ ID: \`${requestId}\`)`; await sendTelegramNotification(message); if (leaveRequestLoadingEl) leaveRequestLoadingEl.classList.add('hidden'); showCustomAlert('ជោគជ័យ!', 'សំណើរបស់អ្នកត្រូវបានផ្ញើដោយជោគជ័យ!', 'success'); navigateTo('page-history'); } catch (error) { console.error("Error submitting leave request:", error); let displayError = error.message; if (error.code?.includes('permission-denied')) displayError = 'Missing or insufficient permissions. សូមពិនិត្យ Firestore Rules។'; if (leaveRequestErrorEl) { leaveRequestErrorEl.textContent = `Error: ${displayError}`; leaveRequestErrorEl.classList.remove('hidden'); } if (leaveRequestLoadingEl) leaveRequestLoadingEl.classList.add('hidden'); if (submitLeaveRequestBtn) submitLeaveRequestBtn.disabled = false; } });
 
 
+    // +++ កូដថ្មី 3 (កែប្រែ) +++
     // --- Out Request Logic ---
-    if (openOutRequestBtn) openOutRequestBtn.addEventListener('click', () => { if (!currentUser) return showCustomAlert("Error", "សូម Login ជាមុនសិន។"); const reqPhoto = document.getElementById('request-out-user-photo'); const reqName = document.getElementById('request-out-user-name'); const reqId = document.getElementById('request-out-user-id'); const reqDept = document.getElementById('request-out-user-department'); if(reqPhoto) reqPhoto.src = currentUser.photo || 'https://placehold.co/60x60/e2e8f0/64748b?text=User'; if(reqName) reqName.textContent = currentUser.name; if(reqId) reqId.textContent = currentUser.id; if(reqDept) reqDept.textContent = currentUser.department || 'មិនមាន'; if (outDurationSearchInput) outDurationSearchInput.value = ''; if (outReasonSearchInput) outReasonSearchInput.value = ''; if (outDateInput) outDateInput.value = getTodayString('dd/mm/yyyy'); selectedOutDuration = null; selectedOutReason = null; if (outRequestErrorEl) outRequestErrorEl.classList.add('hidden'); if (outRequestLoadingEl) outRequestLoadingEl.classList.add('hidden'); if (submitOutRequestBtn) submitOutRequestBtn.disabled = false; navigateTo('page-request-out'); });
+    if (openOutRequestBtn) openOutRequestBtn.addEventListener('click', () => { 
+        if (!currentUser) return showCustomAlert("Error", "សូម Login ជាមុនសិន។");
+        
+        // ថ្មី៖ បង្ហាញ Modal ទូទាត់ប្រាក់ ជំនួសឲ្យការទៅទំព័រទម្រង់ដោយផ្ទាល់
+        console.log("Opening payment modal for 'out request'...");
+        if (paymentQrModal) {
+            paymentQrModal.classList.remove('hidden');
+        } else {
+            console.error("Payment QR Modal not found! Fallback to old logic.");
+            // Fallback ទៅ Logic ចាស់ ប្រសិនបើរក Modal មិនឃើញ
+            const reqPhoto = document.getElementById('request-out-user-photo'); 
+            const reqName = document.getElementById('request-out-user-name'); 
+            const reqId = document.getElementById('request-out-user-id'); 
+            const reqDept = document.getElementById('request-out-user-department'); 
+            if(reqPhoto) reqPhoto.src = currentUser.photo || 'https://placehold.co/60x60/e2e8f0/64748b?text=User'; 
+            if(reqName) reqName.textContent = currentUser.name; 
+            if(reqId) reqId.textContent = currentUser.id; 
+            if(reqDept) reqDept.textContent = currentUser.department || 'មិនមាន'; 
+            if (outDurationSearchInput) outDurationSearchInput.value = ''; 
+            if (outReasonSearchInput) outReasonSearchInput.value = ''; 
+            if (outDateInput) outDateInput.value = getTodayString('dd/mm/yyyy'); 
+            selectedOutDuration = null; 
+            selectedOutReason = null; 
+            if (outRequestErrorEl) outRequestErrorEl.classList.add('hidden'); 
+            if (outRequestLoadingEl) outRequestLoadingEl.classList.add('hidden'); 
+            if (submitOutRequestBtn) submitOutRequestBtn.disabled = false; 
+            navigateTo('page-request-out'); 
+        }
+    });
+
     if (cancelOutRequestBtn) cancelOutRequestBtn.addEventListener('click', () => navigateTo('page-home'));
     if (submitOutRequestBtn) submitOutRequestBtn.addEventListener('click', async () => { selectedOutDuration = outDurations.includes(outDurationSearchInput.value) ? outDurationSearchInput.value : null; selectedOutReason = outReasonSearchInput.value; if (!currentUser || !currentUser.id) return showCustomAlert("Error", "មានបញ្ហា៖ មិនអាចបញ្ជាក់អ្នកប្រើប្រាស់បានទេ។"); if (!selectedOutDuration) { if (outRequestErrorEl) { outRequestErrorEl.textContent = 'សូមជ្រើសរើស "រយៈពេល" ឲ្យបានត្រឹមត្រូវ (ពីក្នុងបញ្ជី)។'; outRequestErrorEl.classList.remove('hidden'); } return; } if (!selectedOutReason || selectedOutReason.trim() === '') { if (outRequestErrorEl) { outRequestErrorEl.textContent = 'សូមបំពេញ "មូលហេតុ" ជាមុនសិន។'; outRequestErrorEl.classList.remove('hidden'); } return; } if (outRequestErrorEl) outRequestErrorEl.classList.add('hidden'); if (outRequestLoadingEl) outRequestLoadingEl.classList.remove('hidden'); if (submitOutRequestBtn) submitOutRequestBtn.disabled = true; try { const dateVal = outDateInput ? outDateInput.value : getTodayString('dd/mm/yyyy'); const requestId = `out_${Date.now()}`; const requestData = { userId: currentUser.id, name: currentUser.name, department: currentUser.department || 'N/A', photo: currentUser.photo || null, duration: selectedOutDuration, reason: selectedOutReason.trim(), startDate: formatDateToDdMmmYyyy(dateVal), endDate: formatDateToDdMmmYyyy(dateVal), status: 'pending', requestedAt: serverTimestamp(), requestId: requestId, firestoreUserId: auth.currentUser ? auth.currentUser.uid : 'unknown_auth_user' }; if (!db || !outRequestsCollectionPath) throw new Error("Firestore DB or Out Collection Path is not initialized."); const requestRef = doc(db, outRequestsCollectionPath, requestId); await setDoc(requestRef, requestData); console.log("Firestore (out) write successful."); let message = `<b>🔔 សំណើសុំច្បាប់ចេញក្រៅ 🔔</b>\n\n`; message += `<b>ឈ្មោះ:</b> ${requestData.name} (${requestData.userId})\n`; message += `<b>ផ្នែក:</b> ${requestData.department}\n`; message += `<b>រយៈពេល:</b> ${requestData.duration}\n`; message += `<b>កាលបរិច្ឆេទ:</b> ${requestData.startDate}\n`; message += `<b>មូលហេតុ:</b> ${requestData.reason}\n\n`; message += `(សូមចូល Firestore ដើម្បីពិនិត្យ ID: \`${requestId}\`)`; await sendTelegramNotification(message); if (outRequestLoadingEl) outRequestLoadingEl.classList.add('hidden'); showCustomAlert('ជោគជ័យ!', 'សំណើរបស់អ្នកត្រូវបានផ្ញើដោយជោគជ័យ!', 'success'); navigateTo('page-history'); } catch (error) { console.error("Error submitting out request:", error); let displayError = error.message; if (error.code?.includes('permission-denied')) displayError = 'Missing or insufficient permissions. សូមពិនិត្យ Firestore Rules។'; if (outRequestErrorEl) { outRequestErrorEl.textContent = `Error: ${displayError}`; outRequestErrorEl.classList.remove('hidden'); } if (outRequestLoadingEl) outRequestLoadingEl.classList.add('hidden'); if (submitOutRequestBtn) submitOutRequestBtn.disabled = false; } });
 
@@ -249,6 +289,45 @@ document.addEventListener('DOMContentLoaded', async () => {
                 attendanceIframe.src = 'about:blank'; 
             }
             navigateTo('page-home');
+        });
+    }
+
+    // +++ កូដថ្មី 3 (បន្ថែម) +++
+    // --- Payment QR Modal Listeners ---
+    if (cancelPaymentBtn) {
+        cancelPaymentBtn.addEventListener('click', () => {
+            if (paymentQrModal) paymentQrModal.classList.add('hidden');
+            console.log("Payment cancelled.");
+        });
+    }
+    
+    if (confirmPaymentBtn) {
+        confirmPaymentBtn.addEventListener('click', () => {
+            if (paymentQrModal) paymentQrModal.classList.add('hidden');
+            console.log("Payment confirmed. Proceeding to 'out request' form.");
+
+            // ឥឡូវ ដំណើរការ Logic ចាស់ ដែលបង្ហាញទម្រង់សុំច្បាប់ចេញក្រៅ
+            // (កូដនេះដកចេញពី if (openOutRequestBtn) ដើម)
+            const reqPhoto = document.getElementById('request-out-user-photo');
+            const reqName = document.getElementById('request-out-user-name');
+            const reqId = document.getElementById('request-out-user-id');
+            const reqDept = document.getElementById('request-out-user-department');
+            
+            if(reqPhoto) reqPhoto.src = currentUser.photo || 'https://placehold.co/60x60/e2e8f0/64748b?text=User';
+            if(reqName) reqName.textContent = currentUser.name;
+            if(reqId) reqId.textContent = currentUser.id;
+            if(reqDept) reqDept.textContent = currentUser.department || 'មិនមាន';
+
+            if (outDurationSearchInput) outDurationSearchInput.value = '';
+            if (outReasonSearchInput) outReasonSearchInput.value = '';
+            if (outDateInput) outDateInput.value = getTodayString('dd/mm/yyyy');
+            selectedOutDuration = null;
+            selectedOutReason = null;
+            if (outRequestErrorEl) outRequestErrorEl.classList.add('hidden');
+            if (outRequestLoadingEl) outRequestLoadingEl.classList.add('hidden');
+            if (submitOutRequestBtn) submitOutRequestBtn.disabled = false;
+            
+            navigateTo('page-request-out');
         });
     }
 
